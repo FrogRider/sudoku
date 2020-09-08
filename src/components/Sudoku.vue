@@ -26,7 +26,16 @@
     </div>
 
     <div class="sudoku__buttons">
-      
+      <div class="sudoku__button"
+        v-for="number in Array(9).keys()"
+        :key="number"
+      >
+        <div class="sudoku__button-inner"
+          @click="addNumber(number + 1)"
+        >
+          {{ number + 1 }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -72,6 +81,14 @@
 
         this.activeItemX = x
         this.activeItemY = y 
+      },
+      addNumber (num) {
+        if (this.activeItemX !== -1 && this.activeItemY !== -1) {
+          this.puzzle[this.activeItemX][this.activeItemY].value = num
+          // console.log(`${this.activeItemX} ${this.activeItemY}`)
+          // this.activeItemX = this.activeItemY = -1
+          // alert(this.puzzle[this.activeItemY][this.activeItemX].value)
+        }
       }
      },
      mounted () {
@@ -94,7 +111,8 @@
     }
 
     &__grid {
-      width: $grid-width;
+      max-width: $grid-width;
+      width: 100%;
       margin: 0 auto;
       background-color: rgba(255, 99, 71, .7);
       border-radius: $border-radius;
@@ -148,6 +166,37 @@
         border: 1px solid #fff;
         z-index: 100;
       }
+    }
+
+    &__buttons {
+      max-width: 200px;
+      width: 100%;
+      margin: 10px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    &__button {
+      position: relative;
+
+      &::before {
+        content: "";
+        display: block;
+        padding-top: 100%;
+      }
+    }
+
+    &__button-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      place-items: center;
+      background-color: red;
+      border: 1px solid white;
+      cursor: pointer;
     }
   }
 
