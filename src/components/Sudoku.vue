@@ -15,7 +15,7 @@
           <div class="sudoku__row-item-content"
             :class="{ 
               'original': item.original,
-              'active': activeItemX === rowIdx && activeItemY === colIdx
+              'active': activeCellX === rowIdx && activeCellY === colIdx
             }"
             @click="setItemActive(rowIdx, colIdx, item.original)"
           >
@@ -23,6 +23,24 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="sudoku__clear"
+      @click="clear()"
+    >
+      Clear
+    </div>
+
+    <div class="sudoku__reset"
+      @click="reset()"
+    >
+      Reset
+    </div>
+
+    <div class="sudoku__undo"
+      @click="undo()"
+    >
+      Undo
     </div>
 
     <div class="sudoku__buttons">
@@ -49,8 +67,10 @@
       return {
         puzzle: [],
         difficulty: 'easy',
-        activeItemX: -1,
-        activeItemY: -1
+        //selected cell's coordinates
+        activeCellX: -1,
+        activeCellY: -1,
+        history: []
       }
     },
     methods: {
@@ -71,25 +91,66 @@
       },
       setItemActive (x, y, original) {
         if (original) {
+          //unables to change default numbers
           return
         }
 
-        if (this.activeItemX === x && this.activeItemY === y) {
-          this.activeItemX = this.activeItemY = -1
+        if (this.activeCellX === x && this.activeCellY === y) {
+          //if item was selected and then clicked one more time - deselect it
+          this.activeCellX = this.activeCellY = -1
           return
         }
 
-        this.activeItemX = x
-        this.activeItemY = y 
+        //select scell
+        this.activeCellX = x
+        this.activeCellY = y 
       },
       addNumber (num) {
-        if (this.activeItemX !== -1 && this.activeItemY !== -1) {
-          this.puzzle[this.activeItemX][this.activeItemY].value = num
-          // console.log(`${this.activeItemX} ${this.activeItemY}`)
-          // this.activeItemX = this.activeItemY = -1
-          // alert(this.puzzle[this.activeItemY][this.activeItemX].value)
+        //add a number to selected cell
+        if (this.activeCellX !== -1 && this.activeCellY !== -1) {
+          this.puzzle[this.activeCellX][this.activeCellY].value = num
+          this.history.push({
+            x: this.activeCellX,
+            y: this.activeCellY,
+            value: num
+          })
         }
-      }
+      },
+      undo () {
+        console.log(this.history.length)
+        if(this.history.length !== 1) {
+          this.puzzle[this.activeCellX][this.activeCellY].value = null
+          this.history.pop()
+          const lastChange = this.history[this.history.length-1]
+          this.activeCellX = lastChange.x
+          this.activeCellY = lastChange.y
+          this.puzzle[lastChange.x][lastChange.y].value = lastChange.value
+        } 
+        // if ( this.history.length === 0) {
+        //   this.activeCellX = this.activeCellY = -1
+        // }
+        
+        // console.log(lastChange)
+      },
+      clear () {
+        this.puzzle.map(row => {
+          //loop through all the rows
+          row.map(el => {
+            //loop through all the elements in current row
+            if(el.original === false) {
+              //reset all the numbers user has inputed
+              el.value = null
+             }
+           })
+         })
+         //remove selection from the cell
+         this.activeCellX = this.activeCellY = -1
+       },
+       reset () {
+         //generate new puzzle
+         this.activeCellX = this.activeCellY = -1
+         this.generatePuzzle()
+       }
      },
      mounted () {
        this.generatePuzzle()
@@ -169,11 +230,11 @@
     }
 
     &__buttons {
-      max-width: 200px;
+      max-width: $grid-width;
       width: 100%;
       margin: 10px auto 0;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(9, 1fr);
     }
 
     &__button {
