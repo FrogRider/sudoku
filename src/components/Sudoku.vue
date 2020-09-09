@@ -64,7 +64,7 @@
     data: function () {
       return {
         puzzle: [],
-        difficulty: 79,
+        difficulty: 'normal',
         //selected cell's coordinates
         activeCellX: -1,
         activeCellY: -1,
