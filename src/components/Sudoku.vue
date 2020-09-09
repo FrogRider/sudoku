@@ -15,7 +15,8 @@
           <div class="sudoku__row-item-content"
             :class="{ 
               'original': item.original,
-              'active': activeCellX === rowIdx && activeCellY === colIdx
+              'active': activeCellX === rowIdx && activeCellY === colIdx,
+              'invalid': item.value && isInvalid(rowIdx, colIdx, item.value)
             }"
             @click="setItemActive(rowIdx, colIdx, item.original)"
           >
@@ -25,22 +26,18 @@
       </div>
     </div>
 
-    <div class="sudoku__clear"
-      @click="clear()"
-    >
-      Clear
-    </div>
+    <div class="sudoku__funcs">
+      <div class="sudoku__clear" @click="clear()">
+        Clear
+      </div>
 
-    <div class="sudoku__reset"
-      @click="reset()"
-    >
-      Reset
-    </div>
+      <div class="sudoku__reset" @click="reset()">
+        Reset
+      </div>
 
-    <div class="sudoku__undo"
-      @click="undo()"
-    >
-      Undo
+      <div class="sudoku__undo" @click="undo()">
+        Undo
+      </div>
     </div>
 
     <div class="sudoku__buttons">
@@ -117,27 +114,24 @@
         }
       },
       undo () {
-        console.log(this.history.length)
-        if(this.history.length !== 1) {
-          this.puzzle[this.activeCellX][this.activeCellY].value = null
-          this.history.pop()
-          const lastChange = this.history[this.history.length-1]
+        if(this.history.length > 1) {
+          //erase current value
+          const valueToDelete = this.history.pop()
+          this.puzzle[valueToDelete.x][valueToDelete.y].value = null
+          //backup previous value from history
+          const lastChange = this.history[this.history.length - 1]
+          //set backuped value to the current
           this.activeCellX = lastChange.x
           this.activeCellY = lastChange.y
           this.puzzle[lastChange.x][lastChange.y].value = lastChange.value
         } 
-        // if ( this.history.length === 0) {
-        //   this.activeCellX = this.activeCellY = -1
-        // }
-        
-        // console.log(lastChange)
       },
       clear () {
         this.puzzle.map(row => {
           //loop through all the rows
           row.map(el => {
             //loop through all the elements in current row
-            if(el.original === false) {
+            if(!el.original) {
               //reset all the numbers user has inputed
               el.value = null
              }
@@ -147,9 +141,34 @@
          this.activeCellX = this.activeCellY = -1
        },
        reset () {
-         //generate new puzzle
          this.activeCellX = this.activeCellY = -1
+         //generate new puzzle
          this.generatePuzzle()
+       },
+       isInvalid(x, y, val) {
+        if (!val) return true
+
+        for (let c = 0; c < 9; c += 1) {
+          //check for identical values
+          if (this.puzzle[x][c].value === val && c !== y) return true
+          //in row
+          if (this.puzzle[c][y].value === val && c !== x) return true
+          //in column
+        }
+
+        const rowStart = Math.floor(x / 3) * 3
+        const colStart = Math.floor(y / 3) * 3
+
+        for (let r = rowStart; r < rowStart + 3; r += 1) {
+          //in 3*3 square
+          for (let c = colStart; c < colStart + 3; c += 1) {
+            if (this.puzzle[r][c].value === val && !(r === x && c === y)) {
+              return true
+            }
+          }
+        }
+
+        return false
        }
      },
      mounted () {
@@ -259,6 +278,14 @@
       border: 1px solid white;
       cursor: pointer;
     }
+
+    &__funcs {
+      display: flex;
+      justify-content: space-between;
+      max-width: $grid-width;
+      width: 100%;
+      margin: 0 auto;
+    }
   }
 
   .original {
@@ -271,5 +298,9 @@
 
   .active {
     background: rgba(255, 255, 255, 0);
+  }
+
+  .invalid {
+    background-color: red;
   }
 </style>
