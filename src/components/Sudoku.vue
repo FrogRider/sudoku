@@ -30,6 +30,7 @@
       <div class="sudoku__clear" @click="clear()">
         Clear
       </div>
+      <p>{{this.steps}}</p>
 
       <div class="sudoku__reset" @click="reset()">
         Reset
@@ -63,11 +64,12 @@
     data: function () {
       return {
         puzzle: [],
-        difficulty: 'easy',
+        difficulty: 79,
         //selected cell's coordinates
         activeCellX: -1,
         activeCellY: -1,
-        history: []
+        history: [],
+        steps: 0
       }
     },
     methods: {
@@ -105,12 +107,19 @@
       addNumber (num) {
         //add a number to selected cell
         if (this.activeCellX !== -1 && this.activeCellY !== -1) {
+          this.steps++
           this.puzzle[this.activeCellX][this.activeCellY].value = num
           this.history.push({
             x: this.activeCellX,
             y: this.activeCellY,
             value: num
           })
+        }
+
+        if(this.isGameComplete()) {
+          console.log(`Success! \n ${this.getSteps} steps was required`)
+          alert(`Success! \n ${this.getSteps} steps was required`)
+          this.reset()
         }
       },
       undo () {
@@ -124,6 +133,7 @@
           this.activeCellX = lastChange.x
           this.activeCellY = lastChange.y
           this.puzzle[lastChange.x][lastChange.y].value = lastChange.value
+          this.steps++
         } 
       },
       clear () {
@@ -139,19 +149,21 @@
          })
          //remove selection from the cell
          this.activeCellX = this.activeCellY = -1
+         this.steps = 0
        },
        reset () {
          this.activeCellX = this.activeCellY = -1
          //generate new puzzle
          this.generatePuzzle()
+         this.steps = 0
        },
        isInvalid(x, y, val) {
         if (!val) return true
 
         for (let c = 0; c < 9; c += 1) {
-          //check for identical values
+          //check for identical values in:
           if (this.puzzle[x][c].value === val && c !== y) return true
-          //in row
+          //row
           if (this.puzzle[c][y].value === val && c !== x) return true
           //in column
         }
@@ -169,10 +181,29 @@
         }
 
         return false
+       },
+       isGameComplete () {
+         let errors = []
+         this.puzzle.map((row, rowId) => {
+           row.map((el, colId) => {
+            //  console.log(`${rowId} - ${colId} - ${el.value}`)
+             errors.push(this.isInvalid(rowId, colId, el.value))
+           })
+         })
+
+         if (errors.indexOf(true) === -1) {
+           this.steps = 0
+           return true
+         } 
        }
      },
      mounted () {
        this.generatePuzzle()
+     },
+     computed: {
+      getSteps: function () {
+        return this.steps
+      }
      }
   }
 </script>
